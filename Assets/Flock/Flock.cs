@@ -131,32 +131,34 @@ public class Flock : MonoBehaviour {
 		int count = 0;
 		for (int i = 0; i < fc.obstSize(); i++) { //Formula in part thanks to: http://stackoverflow.com/a/1084899
 			GameObject obst = fc.getObst(i);
-			Vector3 delta = obst.transform.position - transform.position;
-			Vector3 feeler = velocity * 2f;
-			float radius = obst.transform.localScale.x / 2;
-			
-			float a = Vector3.Dot(feeler, feeler);
-			float b = 2 * Vector3.Dot(delta, feeler);
-			float c = Vector3.Dot(delta, delta) - radius * radius;
-			
-			float dist = Mathf.Clamp((delta.magnitude - radius), .001f, delta.magnitude);
-			float discriminant = b * b - 4 * a * c;
-			if (discriminant >= 0) {
-				// ray didn't totally miss sphere,
-				// so there is a solution to
-				// the equation.
-				discriminant = Mathf.Sqrt(discriminant);
-				float t1 = (-b - discriminant) / (2 * a);
-				float t2 = (-b + discriminant) / (2 * a);
+			if (obst){
+				Vector3 delta = obst.transform.position - transform.position;
+				Vector3 feeler = velocity * 2f;
+				float radius = obst.transform.localScale.x / 2;
 				
-				// 3x HIT cases:
-				//          -o->             --|-->  |            |  --|->
-				// Impale(t1 hit,t2 hit), Poke(t1 hit,t2>1), ExitWound(t1<0, t2 hit), 
-				if ((t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)) {
-					count++;
-					force -= delta.normalized / Mathf.Pow(dist, 2f);
+				float a = Vector3.Dot(feeler, feeler);
+				float b = 2 * Vector3.Dot(delta, feeler);
+				float c = Vector3.Dot(delta, delta) - radius * radius;
+				
+				float dist = Mathf.Clamp((delta.magnitude - radius), .001f, delta.magnitude);
+				float discriminant = b * b - 4 * a * c;
+				if (discriminant >= 0) {
+					// ray didn't totally miss sphere,
+					// so there is a solution to
+					// the equation.
+					discriminant = Mathf.Sqrt(discriminant);
+					float t1 = (-b - discriminant) / (2 * a);
+					float t2 = (-b + discriminant) / (2 * a);
+					
+					// 3x HIT cases:
+					//          -o->             --|-->  |            |  --|->
+					// Impale(t1 hit,t2 hit), Poke(t1 hit,t2>1), ExitWound(t1<0, t2 hit), 
+					if ((t1 >= 0 && t1 <= 1) || (t2 >= 0 && t2 <= 1)) {
+						count++;
+						force -= delta.normalized / Mathf.Pow(dist, 2f);
+					}
+					
 				}
-				
 			}
 		}
 		if (count != 0) {

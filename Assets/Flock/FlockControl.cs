@@ -4,35 +4,36 @@ using System.Collections;
 public class FlockControl : MonoBehaviour { //Creates the 4 different types of objects, contains them and handles ball respawning
 	public static readonly float ROOM_WIDTH = 38; //Actually twice this
 	public static readonly float ROOM_HEIGHT = 30;
-	private bool makeBoids = true;
+	public static bool makeBoids = true;
+	public static bool makeObs = true;
+	public static bool makeBall = true;
+	public static bool makePred = true;
 	public GameObject prefBoid;
 	private int spawnCount = 300;//Total to spawn
 	private int birdCount = 0;//Number spawned
 	private Flock[] boids;
-	private bool makeObs = true;
 	public GameObject prefObst;
 	private int obstCount = 10;
 	private GameObject[] obstacles;
 	private static readonly float MIN_SIZE = 3f;
 	private static readonly float MAX_SIZE = 10f;
-	private bool makeBall = true;
 	public GameObject prefBall;
 	private GameObject curBall;
-	private bool makePred = true;
 	public GameObject prefPred;
 	private int predCount = 3;
 	private Predator[] preds;
-
-	// Use this for initialization
+	
 	void Start() {
+		Time.timeScale=1.5f;
+		boids = new Flock[spawnCount];
+		preds = new Predator[predCount];
+		obstacles = new GameObject[obstCount];
 		if (makeBoids) {
-			boids = new Flock[spawnCount];
 			for (int i = 0; i < spawnCount; i++) {
 				spawn();
 			}
 		}
 		if (makePred) {
-			preds = new Predator[predCount];
 			for (int i = 0; i < predCount; i++) {
 				preds [i] = Instantiate<GameObject>(prefPred).GetComponent<Predator>();
 				preds [i].transform.position = new Vector3(Random.Range(-ROOM_WIDTH, ROOM_WIDTH), Random.Range(-ROOM_HEIGHT, ROOM_HEIGHT));
@@ -40,7 +41,6 @@ public class FlockControl : MonoBehaviour { //Creates the 4 different types of o
 			}
 		}
 		if (makeObs) {
-			obstacles = new GameObject[obstCount];
 			for (int i = 0; i < obstCount; i++) {
 				obstacles [i] = Instantiate<GameObject>(prefObst);
 				float size = Random.Range(MIN_SIZE, MAX_SIZE);
@@ -52,8 +52,7 @@ public class FlockControl : MonoBehaviour { //Creates the 4 different types of o
 			spawnBall();
 		}
 	}
-	
-	// Update is called once per frame
+
 	void Update() { //Just so we can speed up or slow down simulation
 		float timeAdjust = .4f;
 		if (Input.GetKeyDown(KeyCode.UpArrow)) {
@@ -110,8 +109,23 @@ public class FlockControl : MonoBehaviour { //Creates the 4 different types of o
 		}
 	}
 
-	public void spawnBall() {
+	public void spawnBall() { //Spawn a ball in an open slot
+		Vector2 position;
+		Collider2D[] colliders;
+		bool hasCollision=false;
+		do { //Assuming we do not have a collision, this runs once
+			hasCollision=false;
+			position = new Vector3(Random.Range(-ROOM_WIDTH, ROOM_WIDTH), Random.Range(-ROOM_HEIGHT, ROOM_HEIGHT));
+			colliders = Physics2D.OverlapCircleAll(position,2f);
+			for (int i = 0; i < colliders.Length; i++) {
+				if (colliders[i].gameObject.CompareTag("Obstacle")){ //We are colliding with an obstacle and need to go over again.
+					hasCollision=true;
+				}
+
+			}
+
+		} while (hasCollision);
 		curBall = Instantiate<GameObject>(prefBall);
-		curBall.transform.position = new Vector3(Random.Range(-ROOM_WIDTH, ROOM_WIDTH), Random.Range(-ROOM_HEIGHT, ROOM_HEIGHT));
+		curBall.transform.position = position;
 	}
 }
